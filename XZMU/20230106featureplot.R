@@ -13,12 +13,22 @@ rds <-  ScaleData(object = rds)
 rds <- RunPCA(object=rds,features = VariableFeatures(object = rds))
 rds <- FindNeighbors(rds, reduction = "pca", dims = 1:20)
 # 0.8 1.2 1.6
-rds <- FindClusters(rds,resolution = 1.6, algorithm = 1)
+rds <- FindClusters(rds,resolution = 0.8, algorithm = 1)
 rds <- RunTSNE(object=rds,dims.use=1:20,do.fast=TRUE,check_duplicates = FALSE)
 rds <- RunUMAP(rds, reduction = "pca", dims = 1:20)
 
 UMAPPlot(rds,group.by=("cluster"))
 UMAPPlot(rds,group.by=("seurat_clusters"),label = TRUE,label.size = 6)
+
+#MARKER 
+Idents(rds) <- "seurat_clusters"
+allmarkers <- FindAllMarkers(rds)
+allmarkers <- subset(allmarkers,avg_log2FC>0) 
+write.table(allmarkers,file="label/diffgenes.xls",sep='\t',quote=F,row.names=T)
+
+# AVERAGE EXP
+rt <- AverageExpression(rds,idents="seurat_clusters")
+write.table(rt,"label/averageexpression.tsv",sep="\t",quote=F,row.names=T)
 
 #  567 cd4naive 11,12 cd8naive 13 cd8Teff
 # NKT
@@ -95,4 +105,72 @@ FeaturePlot(rds,features =c("FOXP3","IL2RA","CXCR5","PDCD1","IL10","CCR4","CD69"
 # Tumour-Treg
 FeaturePlot(rds,features =c("FOXP3","CCR8","TNFRSF18","LAYN","TNFRSF9","IKZF2","RTKN2","CTLA4","BATF","IL21R"))
 
+# CD4/CD8
+FeaturePlot(rds,features =c("CD4","CD8A","CD8B"))
 
+
+Idents(rds) <- "seurat_clusters"
+rds1 <- subset(rds,idents = c(0))
+
+cluster0 = vector()
+cluster1 = vector()
+cluster2 = vector()
+cluster3 = vector()
+cluster4 = vector()
+cluster5 = vector()
+cluster6 = vector()
+cluster7 = vector()
+cluster8 = vector()
+cluster9 = vector()
+cluster10 = vector()
+cluster11 = vector()
+cluster12 = vector()
+cluster13 = vector()
+cluster14 = vector()
+cluster15 = vector()
+cluster16 = vector()
+cluster17 = vector()
+cluster18 = vector()
+cluster19 = vector()
+cluster20 = vector()
+cluster21 = vector()
+cluster22 = vector()
+cluster23 = vector()
+
+target_genes= c('ANXA1', 'ANXA2', 'BATF', 'BCL6', 'BHLHE40', 'BTLA', 'CAPG', 'CCL5', 'CCR4', 'CCR6', 'CCR7', 'CCR8', 'CD160', 'CD200', 'CD27', 'CD28', 'CD4', 'CD44', 'CD6', 'CD69', 'CD8A', 'CD8B', 'CDC25B', 'CTLA4', 'CTSH', 'CTSW', 'CX3CR1', 'CXCR3', 'CXCR4', 'CXCR5', 'CXCR6', 'ENTPD1', 'EOMES', 'FCGR3A', 'FGFBP2', 'FOXP3', 'FURIN', 'GNLY', 'GPR183', 'GZMA', 'GZMB', 'GZMH', 'GZMK', 'HAVCR2', 'ICA1', 'ICAM2', 'ICOS', 'IFNG', 'IGFLR1', 'IKZF2', 'IL10', 'IL10RA', 'IL17A', 'IL21R', 'IL23R', 'IL2RA', 'IL6ST', 'IL7R', 'ITGAE', 'KIR2DL4', 'KLRB1', 'KLRC1', 'KLRC2', 'KLRC3', 'KLRG1', 'LAYN', 'LEF1', 'MAGEH1', 'MIR155HG', 'MYADM', 'NCR3', 'NKG7', 'NR4A1', 'NR4A2', 'NR4A3', 'PDCD1', 'PRF1', 'PTGER2', 'PTGER4', 'RGS1', 'RORA', 'RORC', 'RTKN2', 'RUNX3', 'S1PR1', 'S1PR4', 'S1PR5', 'SELL', 'SLC4A10', 'TBX21', 'TCF7', 'TMIGD2', 'TNFRSF18', 'TNFRSF9', 'TOX', 'TOX2', 'XCL1', 'XCL2', 'ZBTB16')
+for (i in target_genes){
+  print(i)
+  percent = sum(GetAssayData(object = rds1, slot = "data")[i,]>0)/nrow(rds1@meta.data)
+  print(percent)
+  cluster0 <- c(cluster0,percent)
+}
+
+Idents(rds) <- "seurat_clusters"
+df = data.frame(genes = target_genes)
+for (i in 0:23){
+  tmp = c()
+  rds1 <- subset(rds,idents = c(i))
+  for (j in target_genes){
+    print(j)
+    percent = sum(GetAssayData(object = rds1, slot = "data")[j,]>0)/nrow(rds1@meta.data)
+    percent = round(percent, 4)
+    percent = scales::percent(percent, 0.01)
+    print(percent)
+    tmp <- c(tmp, percent)
+  }
+  df = cbind(df, tmp)
+  colnames(df)[i+2] = paste('cluster',i,sep='_')
+}
+write.table(df,file="label/gene_exp_percent.tsv",sep='\t',quote=F,row.names=T)
+# check 
+for (i in 0:23){
+  rds1 <- subset(rds,idents = c(i))
+  temp = sum(GetAssayData(object = rds1, slot = "data")["ANXA1",]>0)/nrow(rds1@meta.data)
+  print(temp)
+}
+
+rds1 <- subset(rds,idents = c(23))
+temp = GetAssayData(object = rds1, slot = "data")
+temp = as.data.frame(temp)
+aa = temp[which(rownames(temp) %in% c("ANXA1")),]
+aa = t(aa)
