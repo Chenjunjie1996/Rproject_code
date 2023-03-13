@@ -141,7 +141,7 @@ dev.off()
 # GSEA
 rds = readRDS('C:/Users/admin/Desktop/daily work/GITHUB/徐州医科大施明/20230220subsetT_harmony/T_pos_1.2/rename.rds')
 Idents(rds) <- "sample"
-rds <- subset(rds,idents = c("DYC0","DYC1","DYC2"))
+rds <- subset(rds,idents = c("GC0","GC1","GC2"))
 exp <- rds@assays$RNA@data
 dim(exp)
 exp[1:4,1:4]
@@ -149,7 +149,7 @@ table(rds$sample)
 Idents(rds) <- 'sample'
 # , min.pct = 0,logfc.threshold = 0 
 # DYC-0-X1 DYC-1-X1 DYC-2-X1 WYP-0-X2 WYP-1-X1 WYP-2-X2
-deg = FindMarkers(object = rds,ident.1 = 'DYC2', ident.2 = 'DYC1' ,min.pct = 0.1,logfc.threshold = 0.1)
+deg = FindMarkers(object = rds,ident.1 = 'GC2', ident.2 = 'GC1' ,min.pct = 0.01,logfc.threshold = 0.01)
 #deg = FindAllMarkers(rds)
 head(deg)
 
@@ -187,5 +187,17 @@ gseaplot2(egmt,geneSetID = c('HALLMARK_E2F_TARGETS','HALLMARK_MYC_TARGETS_V1','H
           pvalue_table=T,rel_heights = c(3, 1, 2),color = c('palevioletRed','lightskyblue','darkCyan'))
 
 # 特殊
-gseaplot2(egmt,geneSetID = c('HALLMARK_COMPLEMENT','HALLMARK_ALLOGRAFT_REJECTION'),
+gseaplot2(egmt,geneSetID = c('HALLMARK_TNFA_SIGNALING_VIA_NFKB','HALLMARK_WNT_BETA_CATENIN_SIGNALING'),
           pvalue_table=T,rel_heights = c(3, 1, 2),color = c('palevioletRed','lightskyblue'))
+
+
+# 输出表达矩阵
+rds = readRDS('C:/Users/admin/Desktop/daily work/GITHUB/徐州医科大施明/20230220subsetT_harmony/T_pos_1.2/rename.rds')
+meta = rds@meta.data
+UMAPPlot(rds)
+
+Idents(rds) <- "sample"
+rds1 = subset(rds,idents=c('WYP2'))
+
+exprMatrix <- as.matrix(GetAssayData(rds1, slot='counts'))
+write.table(exprMatrix,file = 'C:/Users/admin/Desktop/daily work/GITHUB/徐州医科大施明/20230220subsetT_harmony/20230313/WYP2_matrix.tsv',col.names=NA,sep="\t",quote =FALSE)
